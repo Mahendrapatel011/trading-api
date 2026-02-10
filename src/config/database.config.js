@@ -33,18 +33,12 @@ const connectDatabase = async () => {
     // In production, use migrations instead
     // Note: After running migrations, sync will skip index creation if they already exist
     // Sync all models (create tables if they don't exist)
-    // In development, we want to sync. In production, we usually use migrations.
-    if (APP_CONFIG.NODE_ENV !== 'production') {
-      try {
-        // Use alter: true to update tables to match models
-        await sequelize.sync({ alter: true });
-        logger.info('✅ Database tables synchronized (development mode)');
-      } catch (error) {
-        logger.error('❌ Database sync error:', error.message);
-      }
-    } else {
-      // In production, just verify connection
-      logger.info('✅ Database connection verified (production mode)');
+    // Use alter: true to update tables to match models
+    try {
+      await sequelize.sync({ alter: true });
+      logger.info('✅ Database tables synchronized');
+    } catch (error) {
+      logger.error('❌ Database sync error:', error.message);
     }
 
     return sequelize;
