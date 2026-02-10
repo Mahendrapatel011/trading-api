@@ -13,11 +13,23 @@ const app = express();
 
 app.use(helmet());
 
+// Handle multiple origins
+const allowedOrigins = APP_CONFIG.CORS_ORIGIN ? APP_CONFIG.CORS_ORIGIN.split(',') : [];
+
 app.use(cors({
-    origin: APP_CONFIG.CORS_ORIGIN,
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-location-Id"]  // ✅ Added X-location-Id
+    allowedHeaders: ["Content-Type", "Authorization", "X-location-Id"]
 }));
 
 // Rate limiting
