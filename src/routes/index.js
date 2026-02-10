@@ -10,6 +10,9 @@ import unloadingRateRoutes from './unloadingRate.routes.js';
 import taiyariRateRoutes from './taiyariRate.routes.js';
 import interestRateRoutes from './interestRate.routes.js';
 import supplierRoutes from './supplier.routes.js';
+import purchaseRoutes from './purchase.routes.js';
+import saleRoutes from './sale.routes.js';
+import loanRoutes from './loan.routes.js';
 
 const router = Router();
 
@@ -31,5 +34,10 @@ router.use('/unloading-rates', unloadingRateRoutes);
 router.use('/taiyari-rates', taiyariRateRoutes);
 router.use('/interest-rates', interestRateRoutes);
 router.use('/suppliers', supplierRoutes);
+
+// Transactions
+router.use('/purchases', purchaseRoutes);
+router.use('/sales', saleRoutes);
+router.use('/loans', loanRoutes);
 
 export default router;
