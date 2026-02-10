@@ -33,12 +33,14 @@ const connectDatabase = async () => {
     // In production, use migrations instead
     // Note: After running migrations, sync will skip index creation if they already exist
     // Sync all models (create tables if they don't exist)
-    // Use alter: true to update tables to match models
     try {
-      await sequelize.sync({ alter: true });
-      logger.info('✅ Database tables synchronized');
+      // First try standard sync without alter to just create missing tables
+      await sequelize.sync({ force: false });
+      logger.info('✅ Database tables created/verified');
     } catch (error) {
-      logger.error('❌ Database sync error:', error.message);
+      logger.error('❌ Database sync error:', error);
+      // Fallback: log the specific SQL if it's a Sequelize error
+      if (error.sql) logger.error('SQL that failed:', error.sql);
     }
 
     return sequelize;
