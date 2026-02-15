@@ -1,4 +1,4 @@
-import { Loan, Purchase } from '../models/index.js';
+import { Loan, Purchase, Item, Supplier } from '../models/index.js';
 import ApiError from '../utils/ApiError.js';
 import httpStatus from '../constants/httpStatus.js';
 
@@ -53,7 +53,39 @@ const loanService = {
     getByPurchase: async (purchaseId) => {
         return await Loan.findAll({
             where: { purchaseId, isActive: true },
+            include: [
+                {
+                    model: Purchase,
+                    as: 'purchase',
+                    include: [
+                        { model: Supplier, as: 'supplier', attributes: ['name'] },
+                        { model: Supplier, as: 'purchasedFor', attributes: ['name'] }
+                    ]
+                }
+            ],
             order: [['loanDt', 'ASC']]
+        });
+    },
+
+    /**
+     * Get all loans with purchase details
+     */
+    getAll: async (year) => {
+        return await Loan.findAll({
+            include: [
+                {
+                    model: Purchase,
+                    as: 'purchase',
+                    where: { year, isActive: true },
+                    include: [
+                        { model: Supplier, as: 'supplier', attributes: ['name'] },
+                        { model: Supplier, as: 'purchasedFor', attributes: ['name'] },
+                        { model: Item, as: 'item', attributes: ['name'] }
+                    ]
+                }
+            ],
+            where: { isActive: true },
+            order: [['loanDt', 'DESC']]
         });
     }
 };

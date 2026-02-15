@@ -9,6 +9,7 @@ router.use(authenticateToken);
 router.post('/', loanController.create);
 router.put('/:id', loanController.update);
 router.delete('/:id', loanController.delete);
+router.get('/', loanController.getAll);
 router.get('/purchase/:purchaseId', loanController.getByPurchase);
 
 export default router;

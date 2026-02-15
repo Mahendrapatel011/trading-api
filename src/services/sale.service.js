@@ -1,4 +1,4 @@
-import { Sale, Purchase, Item, Supplier, UnloadingRate, TaiyariRate, RentRate, Loan } from '../models/index.js';
+import { Sale, Purchase, Item, Supplier, UnloadingRate, TaiyariRate, RentRate, Loan, LotProcessing } from '../models/index.js';
 import ApiError from '../utils/ApiError.js';
 import httpStatus from '../constants/httpStatus.js';
 import { sequelize } from '../config/database.config.js';
@@ -16,7 +16,8 @@ const saleService = {
                     where: { locationId, year, isActive: true },
                     include: [
                         { model: Item, as: 'item', attributes: ['name'] },
-                        { model: Supplier, as: 'supplier', attributes: ['name'] }
+                        { model: Supplier, as: 'supplier', attributes: ['name'] },
+                        { model: Supplier, as: 'purchasedFor', attributes: ['name'] }
                     ]
                 }
             ],
@@ -31,29 +32,50 @@ const saleService = {
      * This helps the UI to show sales grouped by purchase lot
      */
     getPurchasesWithSales: async (locationId, year) => {
+        const where = { isActive: true };
+        if (year) where.year = year;
+        if (locationId) where.locationId = locationId;
+
         const purchases = await Purchase.findAll({
-            where: { locationId, year, isActive: true },
+            where,
             include: [
-                { model: Item, as: 'item', attributes: ['name'] },
-                { model: Supplier, as: 'supplier', attributes: ['name'] },
-                { model: Supplier, as: 'purchasedFor', attributes: ['name'] },
+                { model: Item, as: 'item', attributes: ['id', 'name'] },
+                { model: Supplier, as: 'supplier', attributes: ['id', 'name'] },
+                { model: Supplier, as: 'purchasedFor', attributes: ['id', 'name'] },
+                {
+                    model: LotProcessing,
+                    as: 'processings',
+                    where: { isActive: true },
+                    required: false
+                },
                 {
                     model: Sale,
                     as: 'sales',
                     where: { isActive: true },
-                    required: false,
-                    order: [['saleDt', 'ASC']]
+                    required: false
                 },
                 {
                     model: Loan,
                     as: 'loans',
                     where: { isActive: true },
-                    required: false,
-                    order: [['loanDt', 'ASC']]
+                    required: false
                 }
             ],
-            order: [['billDate', 'DESC']]
+            order: [
+                ['billDate', 'DESC'],
+                [{ model: LotProcessing, as: 'processings' }, 'processingDate', 'ASC'],
+                [{ model: Sale, as: 'sales' }, 'saleDt', 'ASC'],
+                [{ model: Loan, as: 'loans' }, 'loanDt', 'ASC']
+            ]
         });
+
+        // Fetch all rates. If locationId provided, filter by it.
+        const rateWhere = { isActive: true };
+        if (locationId) rateWhere.locationId = locationId;
+
+        const unloadingRates = await UnloadingRate.findAll({ where: rateWhere });
+        const taiyariRates = await TaiyariRate.findAll({ where: rateWhere });
+        const rentRates = await RentRate.findAll({ where: rateWhere });
 
         return purchases.map(p => {
             const soldWt = p.sales.reduce((sum, s) => sum + parseFloat(s.saleWt || 0), 0);
@@ -61,6 +83,11 @@ const saleService = {
 
             const remainingWt = (parseFloat(p.netWt) - soldWt).toFixed(3);
             const remainingPkt = p.noOfPacket - soldPkt;
+
+            // Find rates for this specific item
+            const uRate = unloadingRates.find(r => r.itemId === p.itemId)?.rate || 0;
+            const tRate = taiyariRates.find(r => r.itemId === p.itemId)?.rate || 0;
+            const rRate = rentRates.find(r => r.itemId === p.itemId)?.rate || 0;
 
             // Calculate shortage: (Gross Wt - Total Sold Wt) / Gross Wt * 100
             let shortage = 0;
@@ -75,7 +102,11 @@ const saleService = {
                 ...p.toJSON(),
                 remainingWt,
                 remainingPkt,
-                shortage
+                shortage,
+                // Super Admin Rates
+                itemUnloadingRate: uRate,
+                itemTaiyariRate: tRate,
+                itemRentRate: rRate
             };
         });
     },
@@ -89,6 +120,7 @@ const saleService = {
             include: [
                 { model: Item, as: 'item', attributes: ['id', 'name'] },
                 { model: Supplier, as: 'supplier', attributes: ['id', 'name'] },
+                { model: Supplier, as: 'purchasedFor', attributes: ['id', 'name'] },
                 { model: Sale, as: 'sales', where: { isActive: true }, required: false }
             ]
         });
@@ -119,6 +151,8 @@ const saleService = {
                     item: p.item.name,
                     itemId: p.itemId,
                     supplier: p.supplier.name,
+                    purchasedFor: p.purchasedFor?.name || null,
+                    ownerName: p.purchasedFor?.name || p.supplier.name,
                     totalPkt: p.noOfPacket,
                     totalWt: p.netWt,
                     soldPkt,
@@ -154,7 +188,8 @@ const saleService = {
                     as: 'purchase',
                     include: [
                         { model: Item, as: 'item', attributes: ['name'] },
-                        { model: Supplier, as: 'supplier', attributes: ['name'] }
+                        { model: Supplier, as: 'supplier', attributes: ['name'] },
+                        { model: Supplier, as: 'purchasedFor', attributes: ['name'] }
                     ]
                 }
             ]
@@ -183,41 +218,17 @@ const saleService = {
         const itemId = purchase.itemId;
 
         const saleWt = parseFloat(data.saleWt || 0);
-        const salePkt = parseInt(data.salePkt || 0);
-        const nikashiPkt = parseInt(data.nikashiPkt || 0);
-        const tayariPkt = parseInt(data.tayariPkt || 0);
-
-        // Fetch rates and calculate expenses
-        if (data.unloadingLabour === undefined || data.unloadingLabour === 0 || data.unloadingLabour === null) {
-            const rateObj = await UnloadingRate.findOne({ where: { locationId, itemId, isActive: true } });
-            if (rateObj) {
-                // Use nikashiPkt if available, otherwise salePkt
-                const count = nikashiPkt > 0 ? nikashiPkt : salePkt;
-                data.unloadingLabour = (parseFloat(rateObj.rate) * count).toFixed(2);
-            }
-        }
-
-        if (data.tayaroLabour === undefined || data.tayaroLabour === 0 || data.tayaroLabour === null) {
-            const rateObj = await TaiyariRate.findOne({ where: { locationId, itemId, isActive: true } });
-            if (rateObj) {
-                // Use tayariPkt if available, otherwise salePkt
-                const count = tayariPkt > 0 ? tayariPkt : salePkt;
-                data.tayaroLabour = (parseFloat(rateObj.rate) * count).toFixed(2);
-            }
-        }
-
-        if (data.coldStorageRent === undefined || data.coldStorageRent === 0 || data.coldStorageRent === null) {
-            const rateObj = await RentRate.findOne({ where: { locationId, itemId, isActive: true } });
-            if (rateObj) {
-                // Rent is usually on the packets taken out (nikashi)
-                const count = nikashiPkt > 0 ? nikashiPkt : salePkt;
-                data.coldStorageRent = (parseFloat(rateObj.rate) * count).toFixed(2);
-            }
-        }
-
-        // Calculate amount
         const ratePerQtl = parseFloat(data.rate || 0);
         data.amount = (saleWt * ratePerQtl).toFixed(2);
+
+        // Record other fields as provided by UI (likely 0 now)
+        data.unloadingLabour = data.unloadingLabour || 0;
+        data.tayaroLabour = data.tayaroLabour || 0;
+        data.coldStorageRent = data.coldStorageRent || 0;
+        data.newBags = data.newBags || 0;
+        data.sutli = data.sutli || 0;
+        data.pktCollection = data.pktCollection || 0;
+        data.raffuChipri = data.raffuChipri || 0;
 
         // Calculate total expenses
         const expenses = [

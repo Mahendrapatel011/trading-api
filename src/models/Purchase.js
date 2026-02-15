@@ -132,6 +132,9 @@ const Purchase = sequelize.define(
                 fields: ['supplier_id'],
             },
             {
+                fields: ['purchased_for_id'],
+            },
+            {
                 fields: ['item_id'],
             },
             {

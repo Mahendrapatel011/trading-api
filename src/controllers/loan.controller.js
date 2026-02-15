@@ -37,6 +37,16 @@ const loanController = {
             message: 'Loans fetched successfully',
             data: result,
         });
+    }),
+
+    getAll: asyncHandler(async (req, res) => {
+        const { year } = req.query;
+        const result = await loanService.getAll(year);
+        res.status(httpStatus.OK).json({
+            success: true,
+            message: 'All loans fetched successfully',
+            data: result,
+        });
     })
 };
 

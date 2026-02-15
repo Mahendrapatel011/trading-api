@@ -14,14 +14,16 @@ const app = express();
 app.use(helmet());
 
 // Handle multiple origins
-const allowedOrigins = APP_CONFIG.CORS_ORIGIN ? APP_CONFIG.CORS_ORIGIN.split(',') : [];
+const allowedOrigins = APP_CONFIG.CORS_ORIGIN
+    ? APP_CONFIG.CORS_ORIGIN.split(',').map(o => o.trim())
+    : [];
 
 app.use(cors({
     origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
 
-        if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+        if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*') || APP_CONFIG.NODE_ENV === 'development') {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));

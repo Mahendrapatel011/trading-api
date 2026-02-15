@@ -26,6 +26,10 @@ const Loan = sequelize.define(
             allowNull: false,
             defaultValue: 0,
         },
+        repaymentDt: {
+            type: DataTypes.DATEONLY,
+            allowNull: true,
+        },
         interest: {
             type: DataTypes.DECIMAL(15, 2),
             allowNull: false,
