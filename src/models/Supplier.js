@@ -26,6 +26,13 @@ const Supplier = sequelize.define(
         email: {
             type: DataTypes.STRING(100),
             allowNull: true,
+            set(value) {
+                if (value === '') {
+                    this.setDataValue('email', null);
+                } else {
+                    this.setDataValue('email', value);
+                }
+            },
             validate: {
                 isEmail: true,
             },
@@ -37,6 +44,11 @@ const Supplier = sequelize.define(
         },
         address: {
             type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: '',
+        },
+        panCard: {
+            type: DataTypes.STRING(20),
             allowNull: true,
             defaultValue: '',
         },

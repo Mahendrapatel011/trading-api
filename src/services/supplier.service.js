@@ -54,16 +54,21 @@ const supplierService = {
      * Create supplier
      */
     create: async (data) => {
-        // Check if supplier with same name exists in same location
+        // Check if supplier with same name or mobile exists in same location
         const existing = await Supplier.findOne({
             where: {
-                name: data.name,
+                [Op.or]: [
+                    { name: data.name },
+                    { mobileNo: data.mobileNo || 'NONEXIStENT' }
+                ],
                 locationId: data.locationId,
+                isActive: true
             },
         });
 
         if (existing) {
-            throw new ApiError(httpStatus.CONFLICT, 'Supplier with this name already exists in this location');
+            const conflictField = existing.name === data.name ? 'name' : 'mobile number';
+            throw new ApiError(httpStatus.CONFLICT, `Party with this ${conflictField} already exists in this location`);
         }
 
         const supplier = await Supplier.create(data);
@@ -85,18 +90,24 @@ const supplierService = {
             throw new ApiError(httpStatus.NOT_FOUND, 'Supplier not found');
         }
 
-        // Check for duplicate name if name is being updated
-        if (data.name && data.name !== supplier.name) {
+        // Check for duplicate name or mobile if they are being updated
+        if (data.name || data.mobileNo) {
             const existing = await Supplier.findOne({
                 where: {
                     id: { [Op.ne]: id },
-                    name: data.name,
+                    [Op.or]: [
+                        { name: data.name || supplier.name },
+                        { mobileNo: data.mobileNo || supplier.mobileNo || 'NONEXISTENT' }
+                    ],
                     locationId: data.locationId || supplier.locationId,
+                    isActive: true
                 },
             });
 
             if (existing) {
-                throw new ApiError(httpStatus.CONFLICT, 'Supplier with this name already exists in this location');
+                const isNameConflict = existing.name === (data.name || supplier.name);
+                const conflictField = isNameConflict ? 'name' : 'mobile number';
+                throw new ApiError(httpStatus.CONFLICT, `Party with this ${conflictField} already exists in this location`);
             }
         }
 

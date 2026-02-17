@@ -89,12 +89,16 @@ const saleService = {
             const tRate = taiyariRates.find(r => r.itemId === p.itemId)?.rate || 0;
             const rRate = rentRates.find(r => r.itemId === p.itemId)?.rate || 0;
 
-            // Calculate shortage: (Gross Wt - Total Sold Wt) / Gross Wt * 100
+            // Calculate shortage: (Gross Wt - Total Sold Wt - (Charri / 2)) / Gross Wt * 100
             let shortage = 0;
             if (p.sales.length > 0) {
                 const grWt = parseFloat(p.grWt) || 0;
+                // Get charri from LotProcessing (usually stored as packets, 1 pkt = 0.5 quintal)
+                const charriPkt = (p.processings && p.processings.length > 0) ? (parseFloat(p.processings[0].charriPkt) || 0) : 0;
+                const charriWt = charriPkt / 2;
+
                 if (grWt > 0) {
-                    shortage = (((grWt - soldWt) / grWt) * 100).toFixed(2);
+                    shortage = (((grWt - soldWt - charriWt) / grWt) * 100).toFixed(2);
                 }
             }
 

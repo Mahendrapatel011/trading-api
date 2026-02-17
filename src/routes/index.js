@@ -14,6 +14,7 @@ import purchaseRoutes from './purchase.routes.js';
 import saleRoutes from './sale.routes.js';
 import loanRoutes from './loan.routes.js';
 import lotProcessingRoutes from './lotProcessing.routes.js';
+import dashboardRoutes from './dashboard.routes.js';
 
 
 const router = Router();
@@ -42,6 +43,7 @@ router.use('/purchases', purchaseRoutes);
 router.use('/sales', saleRoutes);
 router.use('/loans', loanRoutes);
 router.use('/lot-processings', lotProcessingRoutes);
+router.use('/dashboard', dashboardRoutes);
 
 
 export default router;

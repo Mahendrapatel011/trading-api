@@ -12,6 +12,8 @@ import Purchase from './Purchase.js';
 import Sale from './Sale.js';
 import Loan from './Loan.js';
 import LotProcessing from './LotProcessing.js';
+import LoanRepayment from './LoanRepayment.js';
+
 
 
 // Initialize associations
@@ -46,7 +48,12 @@ const initAssociations = () => {
   // Purchase -> LotProcessing (One to Many)
   Purchase.hasMany(LotProcessing, { foreignKey: 'purchaseId', as: 'processings' });
   LotProcessing.belongsTo(Purchase, { foreignKey: 'purchaseId', as: 'purchase' });
+
+  // Loan -> LoanRepayment (One to Many)
+  Loan.hasMany(LoanRepayment, { foreignKey: 'loanId', as: 'repayments' });
+  LoanRepayment.belongsTo(Loan, { foreignKey: 'loanId', as: 'loan' });
 };
+
 
 
 export {
@@ -64,7 +71,9 @@ export {
   Sale,
   Loan,
   LotProcessing,
+  LoanRepayment,
   initAssociations,
+
 };
 
 
@@ -83,6 +92,8 @@ export default {
   Sale,
   Loan,
   LotProcessing,
+  LoanRepayment,
   initAssociations,
+
 };
 
