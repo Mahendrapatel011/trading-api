@@ -22,7 +22,8 @@ const loadingRateController = {
     }),
 
     getAll: asyncHandler(async (req, res) => {
-        const loadingRates = await loadingRateService.getAll();
+        const { locationId } = req.user;
+        const loadingRates = await loadingRateService.getAll(locationId);
         return ApiResponse.success(res, loadingRates);
     }),
 

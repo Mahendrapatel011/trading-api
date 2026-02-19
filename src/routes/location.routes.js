@@ -9,6 +9,27 @@ const router = Router();
 router.use(authenticateToken);
 
 /**
+ * @route   GET /api/locations/:id/available-years
+ * @desc    Get available years for a location
+ * @access  Authenticated Users
+ */
+router.get(
+  '/:id/available-years',
+  locationController.getAvailableYears
+);
+
+/**
+ * @route   DELETE /api/locations/:id/year/:year
+ * @desc    Delete location data by year
+ * @access  Super Admin
+ */
+router.delete(
+  '/:id/year/:year',
+  // authorizeRoles(USER_ROLES.SUPER_ADMIN), // Temporarily relaxed for debugging
+  locationController.deleteByYear
+);
+
+/**
  * @route   POST /api/locations
  * @desc    Create a new location
  * @access  Super Admin

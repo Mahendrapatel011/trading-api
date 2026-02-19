@@ -7,9 +7,13 @@ import ApiError from '../utils/ApiError.js';
 import httpStatus from '../constants/httpStatus.js';
 
 const loadingRateService = {
-    getAll: async () => {
+    getAll: async (locationId = null) => {
+        const where = { isActive: true };
+        if (locationId) {
+            where.locationId = locationId;
+        }
         return await LoadingRate.findAll({
-            where: { isActive: true },
+            where,
             include: [
                 { model: Item, as: 'item', attributes: ['id', 'name', 'code'] },
                 { model: Unit, as: 'unit', attributes: ['id', 'name'] },

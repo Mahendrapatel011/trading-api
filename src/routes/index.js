@@ -19,14 +19,17 @@ import dashboardRoutes from './dashboard.routes.js';
 
 const router = Router();
 
+// Diagnostic Route
+router.get('/test-route', (req, res) => res.json({ message: 'Router is active', timestamp: new Date() }));
+
 // Auth
 router.use('/auth', authRoutes);
 
-// User Management (super admin)
-router.use('/users', userRoutes);
-
 // location Management (super admin)
 router.use('/locations', locationRoutes);
+
+// User Management (super admin)
+router.use('/users', userRoutes);
 
 // Master Data (Items, Units, Rates)
 router.use('/items', itemRoutes);

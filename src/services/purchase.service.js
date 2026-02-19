@@ -130,20 +130,30 @@ const purchaseService = {
      * Generate next Bill Number for location and year
      */
     generateBillNo: async (locationId, year) => {
-        const lastPurchase = await Purchase.findOne({
+        const purchases = await Purchase.findAll({
             where: { locationId, year },
-            order: [['billNo', 'DESC']],
             attributes: ['billNo'],
+            raw: true
         });
 
-        if (!lastPurchase) {
-            return `${year}-1001`;
+        if (purchases.length === 0) {
+            return `${year}-1`;
         }
 
-        const lastBillNo = lastPurchase.billNo;
-        const parts = lastBillNo.split('-');
-        const nextNumber = parseInt(parts[1] || '1001') + 1;
-        return `${year}-${nextNumber}`;
+        const nums = purchases
+            .map(p => parseInt(p.billNo.split('-')[1] || '0'))
+            .filter(n => !isNaN(n) && n > 0);
+
+        if (nums.length === 0) return `${year}-1`;
+
+        const maxNum = Math.max(...nums);
+
+        // If the only numbers are 1000+, jump back to 1 as per user request
+        if (maxNum >= 1000 && !nums.some(n => n < 1000)) {
+            return `${year}-1`;
+        }
+
+        return `${year}-${maxNum + 1}`;
     },
 
     /**
@@ -194,7 +204,7 @@ const purchaseService = {
         data.netWt = parseFloat(data.grWt) - parseFloat(data.cutting || 0);
 
         // Calculate Amount
-        data.amount = parseFloat(data.netWt) * parseFloat(data.rate);
+        data.amount = parseFloat(data.grWt) * parseFloat(data.rate);
 
         // Calculate Total Cost
         data.totalCost = parseFloat(data.amount) + parseFloat(data.loadingLabour || 0);
@@ -251,10 +261,10 @@ const purchaseService = {
             data.netWt = grWt - cutting;
         }
 
-        if (data.netWt !== undefined || data.rate !== undefined) {
-            const netWt = parseFloat(data.netWt !== undefined ? data.netWt : purchase.netWt);
+        if (data.grWt !== undefined || data.rate !== undefined) {
+            const grWt = parseFloat(data.grWt !== undefined ? data.grWt : purchase.grWt);
             const rate = parseFloat(data.rate !== undefined ? data.rate : purchase.rate);
-            data.amount = netWt * rate;
+            data.amount = grWt * rate;
         }
 
         if (data.amount !== undefined || data.loadingLabour !== undefined) {

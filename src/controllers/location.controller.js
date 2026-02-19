@@ -59,8 +59,17 @@ const locationController = {
    */
   getAvailableYears: asyncHandler(async (req, res) => {
     const { id } = req.params;
+    console.log('--- GET Available Years ---');
+    console.log('Location ID:', id);
+
     const years = await locationService.getAvailableYears(parseInt(id));
-    return ApiResponse.success(res, years, 'Available years fetched successfully');
+    console.log('Found years:', years);
+
+    return res.status(httpStatus.OK).json({
+      success: true,
+      data: years,
+      message: 'Available years fetched successfully'
+    });
   }),
 
   /**
@@ -69,6 +78,12 @@ const locationController = {
    */
   deleteByYear: asyncHandler(async (req, res) => {
     const { id, year } = req.params;
+    console.log('--- DELETE Year Data ---');
+    console.log('User ID:', req.user?.id);
+    console.log('User Role:', req.user?.role);
+    console.log('Target Location ID:', id);
+    console.log('Target Year:', year);
+
     await locationService.deleteByYear(parseInt(id), parseInt(year));
     return ApiResponse.success(res, null, `location data for year ${year} deleted successfully`);
   }),
