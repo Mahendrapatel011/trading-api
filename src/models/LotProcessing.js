@@ -76,8 +76,18 @@ const LotProcessing = sequelize.define(
             allowNull: false,
             defaultValue: 0,
         },
+        tayariWt: {
+            type: DataTypes.DECIMAL(12, 3),
+            allowNull: false,
+            defaultValue: 0,
+        },
         charriPkt: {
             type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 0,
+        },
+        charriWt: {
+            type: DataTypes.DECIMAL(12, 3),
             allowNull: false,
             defaultValue: 0,
         },

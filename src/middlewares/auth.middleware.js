@@ -30,7 +30,7 @@ export const authenticateToken = asyncHandler(async (req, res, next) => {
         {
           model: location,
           as: 'location',
-          attributes: ['id', 'name', 'code'],
+          attributes: ['id', 'name', 'code', 'nameHindi', 'addressHindi', 'officeHindi', 'managerName', 'phone'],
         },
       ],
     });
@@ -143,7 +143,7 @@ export const optionalAuth = asyncHandler(async (req, res, next) => {
         {
           model: location,
           as: 'location',
-          attributes: ['id', 'name', 'code'],
+          attributes: ['id', 'name', 'code', 'nameHindi', 'addressHindi', 'officeHindi', 'managerName', 'phone'],
         },
       ],
     });

@@ -16,6 +16,11 @@ const purchaseService = {
             where,
             include: [
                 {
+                    model: location,
+                    as: 'location',
+                    attributes: ['id', 'name', 'code', 'nameHindi', 'addressHindi', 'officeHindi', 'managerName', 'phone'],
+                },
+                {
                     model: Supplier,
                     as: 'supplier',
                     attributes: ['id', 'name', 'mobileNo'],
@@ -57,7 +62,7 @@ const purchaseService = {
                 {
                     model: location,
                     as: 'location',
-                    attributes: ['id', 'name'],
+                    attributes: ['id', 'name', 'code', 'nameHindi', 'addressHindi', 'officeHindi', 'managerName', 'phone'],
                 },
                 {
                     model: Supplier,
@@ -101,6 +106,11 @@ const purchaseService = {
         const purchase = await Purchase.findOne({
             where,
             include: [
+                {
+                    model: location,
+                    as: 'location',
+                    attributes: ['id', 'name', 'code', 'nameHindi', 'addressHindi', 'officeHindi', 'managerName', 'phone'],
+                },
                 {
                     model: Supplier,
                     as: 'supplier',
@@ -204,7 +214,7 @@ const purchaseService = {
         data.netWt = parseFloat(data.grWt) - parseFloat(data.cutting || 0);
 
         // Calculate Amount
-        data.amount = parseFloat(data.grWt) * parseFloat(data.rate);
+        data.amount = data.netWt * parseFloat(data.rate);
 
         // Calculate Total Cost
         data.totalCost = parseFloat(data.amount) + parseFloat(data.loadingLabour || 0);
@@ -261,10 +271,10 @@ const purchaseService = {
             data.netWt = grWt - cutting;
         }
 
-        if (data.grWt !== undefined || data.rate !== undefined) {
-            const grWt = parseFloat(data.grWt !== undefined ? data.grWt : purchase.grWt);
+        if (data.grWt !== undefined || data.cutting !== undefined || data.rate !== undefined) {
+            const netWt = data.netWt !== undefined ? data.netWt : (parseFloat(purchase.grWt) - parseFloat(purchase.cutting));
             const rate = parseFloat(data.rate !== undefined ? data.rate : purchase.rate);
-            data.amount = grWt * rate;
+            data.amount = netWt * rate;
         }
 
         if (data.amount !== undefined || data.loadingLabour !== undefined) {

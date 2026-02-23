@@ -25,6 +25,11 @@ const Sale = sequelize.define(
             type: DataTypes.STRING(255),
             allowNull: false,
         },
+        saleType: {
+            type: DataTypes.ENUM('Taiyari', 'Charri'),
+            allowNull: false,
+            defaultValue: 'Taiyari',
+        },
         nikashiPkt: {
             type: DataTypes.INTEGER,
             allowNull: false,

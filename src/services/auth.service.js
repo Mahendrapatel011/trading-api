@@ -18,7 +18,7 @@ class AuthService {
         {
           model: location,
           as: 'location',
-          attributes: ['id', 'name', 'code'],
+          attributes: ['id', 'name', 'code', 'nameHindi', 'addressHindi', 'officeHindi', 'managerName', 'phone'],
         },
       ],
     });
@@ -152,7 +152,7 @@ class AuthService {
         {
           model: location,
           as: 'location',
-          attributes: ['id', 'name', 'code'],
+          attributes: ['id', 'name', 'code', 'nameHindi', 'addressHindi', 'officeHindi', 'managerName', 'phone'],
         },
       ],
       attributes: { exclude: ['password', 'refreshToken'] },

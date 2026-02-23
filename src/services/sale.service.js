@@ -1,4 +1,4 @@
-import { Sale, Purchase, Item, Supplier, UnloadingRate, TaiyariRate, RentRate, Loan, LotProcessing } from '../models/index.js';
+import { Sale, Purchase, Item, Supplier, UnloadingRate, TaiyariRate, RentRate, Loan, LotProcessing, location as LocationModel } from '../models/index.js';
 import ApiError from '../utils/ApiError.js';
 import httpStatus from '../constants/httpStatus.js';
 import { sequelize } from '../config/database.config.js';
@@ -17,7 +17,8 @@ const saleService = {
                     include: [
                         { model: Item, as: 'item', attributes: ['name'] },
                         { model: Supplier, as: 'supplier', attributes: ['name'] },
-                        { model: Supplier, as: 'purchasedFor', attributes: ['name'] }
+                        { model: Supplier, as: 'purchasedFor', attributes: ['name'] },
+                        { model: LocationModel, as: 'location', attributes: ['id', 'name', 'code', 'nameHindi', 'addressHindi', 'officeHindi', 'managerName', 'phone'] }
                     ]
                 }
             ],
@@ -42,6 +43,7 @@ const saleService = {
                 { model: Item, as: 'item', attributes: ['id', 'name'] },
                 { model: Supplier, as: 'supplier', attributes: ['id', 'name'] },
                 { model: Supplier, as: 'purchasedFor', attributes: ['id', 'name'] },
+                { model: LocationModel, as: 'location', attributes: ['id', 'name', 'code', 'nameHindi', 'addressHindi', 'officeHindi', 'managerName', 'phone'] },
                 {
                     model: LotProcessing,
                     as: 'processings',
@@ -125,6 +127,7 @@ const saleService = {
                 { model: Item, as: 'item', attributes: ['id', 'name'] },
                 { model: Supplier, as: 'supplier', attributes: ['id', 'name'] },
                 { model: Supplier, as: 'purchasedFor', attributes: ['id', 'name'] },
+                { model: LocationModel, as: 'location', attributes: ['id', 'name', 'code', 'nameHindi', 'addressHindi', 'officeHindi', 'managerName', 'phone'] },
                 { model: Sale, as: 'sales', where: { isActive: true }, required: false }
             ]
         });
@@ -193,7 +196,8 @@ const saleService = {
                     include: [
                         { model: Item, as: 'item', attributes: ['name'] },
                         { model: Supplier, as: 'supplier', attributes: ['name'] },
-                        { model: Supplier, as: 'purchasedFor', attributes: ['name'] }
+                        { model: Supplier, as: 'purchasedFor', attributes: ['name'] },
+                        { model: LocationModel, as: 'location', attributes: ['id', 'name', 'code', 'nameHindi', 'addressHindi', 'officeHindi', 'managerName', 'phone'] }
                     ]
                 }
             ]
