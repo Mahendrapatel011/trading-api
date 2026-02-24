@@ -59,4 +59,15 @@ router.delete(
     purchaseController.delete
 );
 
+// Lot Transfer
+router.post(
+    '/lot-transfer',
+    purchaseController.lotTransfer
+);
+
+router.get(
+    '/transfer-history/all',
+    purchaseController.getTransferHistory
+);
+
 export default router;

@@ -1,4 +1,4 @@
-import { Purchase, Supplier, Item, location, Sale } from '../models/index.js';
+import { Purchase, Supplier, Item, location, Sale, LotTransfer } from '../models/index.js';
 import ApiError from '../utils/ApiError.js';
 import httpStatus from '../constants/httpStatus.js';
 
@@ -308,6 +308,83 @@ const purchaseService = {
         await purchase.update({ isActive: false });
         return purchase;
     },
+
+    /**
+     * Lot Transfer logic (Owner Change)
+     */
+    lotTransfer: async (purchaseId, data) => {
+        const purchase = await Purchase.findByPk(purchaseId);
+        if (!purchase) {
+            throw new ApiError(httpStatus.NOT_FOUND, 'Purchase lot not found');
+        }
+
+        const previousOwnerId = purchase.purchasedForId || purchase.supplierId;
+        const previousRate = purchase.rate;
+
+        // Update the Purchase record with the new owner and new rate
+        const purchaseUpdate = {
+            purchasedForId: data.transferPartyId,
+            rate: data.newRate,
+            amount: parseFloat(data.netWt) * parseFloat(data.newRate),
+            totalCost: (parseFloat(data.netWt) * parseFloat(data.newRate)) + parseFloat(purchase.loadingLabour || 0)
+        };
+        await purchase.update(purchaseUpdate);
+
+        // Record History
+        await LotTransfer.create({
+            purchaseId: purchase.id,
+            previousOwnerId,
+            newOwnerId: data.transferPartyId,
+            previousRate,
+            newRate: data.newRate,
+            transferDate: data.transferDate || new Date().toISOString().split('T')[0],
+            noOfPacket: purchase.noOfPacket,
+            netWt: purchase.netWt,
+            locationId: purchase.locationId,
+            year: purchase.year
+        });
+
+        return await purchaseService.getById(purchase.id);
+    },
+
+    /**
+     * Get Transfer History
+     */
+    getTransferHistory: async (locationId, year, page = 1, limit = 20) => {
+        const offset = (page - 1) * limit;
+        const where = { locationId, year };
+
+        const { count, rows } = await LotTransfer.findAndCountAll({
+            where,
+            include: [
+                {
+                    model: Purchase,
+                    as: 'purchase',
+                    attributes: ['lotNo', 'agreementNo']
+                },
+                {
+                    model: Supplier,
+                    as: 'previousOwner',
+                    attributes: ['name']
+                },
+                {
+                    model: Supplier,
+                    as: 'newOwner',
+                    attributes: ['name']
+                }
+            ],
+            order: [['createdAt', 'DESC']],
+            offset,
+            limit
+        });
+
+        return {
+            totalItems: count,
+            totalPages: Math.ceil(count / limit),
+            currentPage: parseInt(page),
+            data: rows
+        };
+    }
 };
 
 export default purchaseService;

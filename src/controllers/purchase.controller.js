@@ -114,6 +114,34 @@ const purchaseController = {
             message: 'Purchase deleted successfully',
         });
     }),
+
+    /**
+     * Lot Transfer
+     */
+    lotTransfer: asyncHandler(async (req, res) => {
+        const result = await purchaseService.lotTransfer(req.body.purchaseId, req.body);
+        res.status(httpStatus.OK).json({
+            success: true,
+            message: 'Lot transferred successfully',
+            data: result,
+        });
+    }),
+
+    /**
+     * Get Transfer History
+     */
+    getTransferHistory: asyncHandler(async (req, res) => {
+        const locationId = req.locationId;
+        const year = req.query.year ? parseInt(req.query.year) : new Date().getFullYear();
+        const page = req.query.page ? parseInt(req.query.page) : 1;
+        const limit = req.query.limit ? parseInt(req.query.limit) : 20;
+
+        const history = await purchaseService.getTransferHistory(locationId, year, page, limit);
+        res.status(httpStatus.OK).json({
+            success: true,
+            data: history,
+        });
+    }),
 };
 
 export default purchaseController;

@@ -13,7 +13,7 @@ const dashboardService = {
         // Fetch all active purchases
         const purchases = await Purchase.findAll({
             where: wherePurchase,
-            attributes: ['noOfPacket', 'netWt', 'totalCost']
+            attributes: ['id', 'noOfPacket', 'netWt', 'totalCost']
         });
 
         // Calculate Purchase stats

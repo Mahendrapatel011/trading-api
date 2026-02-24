@@ -51,6 +51,7 @@ export const authenticateToken = asyncHandler(async (req, res, next) => {
     // Attach user to request
     req.user = user;
     req.userRole = user.role;
+    req.isSuperAdmin = user.role === 'super_admin';
 
     // ✅ NEW: Check for impersonation header (X-location-Id)
     const impersonatedlocationId = req.header('X-location-Id');

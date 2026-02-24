@@ -13,6 +13,7 @@ import Sale from './Sale.js';
 import Loan from './Loan.js';
 import LotProcessing from './LotProcessing.js';
 import LoanRepayment from './LoanRepayment.js';
+import LotTransfer from './LotTransfer.js';
 
 
 
@@ -52,6 +53,14 @@ const initAssociations = () => {
   // Loan -> LoanRepayment (One to Many)
   Loan.hasMany(LoanRepayment, { foreignKey: 'loanId', as: 'repayments' });
   LoanRepayment.belongsTo(Loan, { foreignKey: 'loanId', as: 'loan' });
+
+  // LotTransfer associations
+  Purchase.hasMany(LotTransfer, { foreignKey: 'purchaseId', as: 'transfers' });
+  LotTransfer.belongsTo(Purchase, { foreignKey: 'purchaseId', as: 'purchase' });
+  LotTransfer.belongsTo(Supplier, { foreignKey: 'previousOwnerId', as: 'previousOwner' });
+  LotTransfer.belongsTo(Supplier, { foreignKey: 'newOwnerId', as: 'newOwner' });
+  location.hasMany(LotTransfer, { foreignKey: 'locationId', as: 'transfers' });
+  LotTransfer.belongsTo(location, { foreignKey: 'locationId', as: 'location' });
 };
 
 
@@ -72,8 +81,8 @@ export {
   Loan,
   LotProcessing,
   LoanRepayment,
+  LotTransfer,
   initAssociations,
-
 };
 
 
@@ -93,7 +102,7 @@ export default {
   Loan,
   LotProcessing,
   LoanRepayment,
+  LotTransfer,
   initAssociations,
-
 };
 
