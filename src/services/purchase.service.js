@@ -42,7 +42,7 @@ const purchaseService = {
                     required: false,
                 }
             ],
-            order: [['billDate', 'DESC'], ['billNo', 'DESC']],
+            order: [['billDate', 'ASC'], ['id', 'ASC']],
         });
         return purchases;
     },
@@ -86,7 +86,7 @@ const purchaseService = {
                     required: false,
                 }
             ],
-            order: [['billDate', 'DESC'], ['billNo', 'DESC']],
+            order: [['billDate', 'ASC'], ['id', 'ASC']],
         });
         return purchases;
     },
@@ -360,7 +360,7 @@ const purchaseService = {
                 {
                     model: Purchase,
                     as: 'purchase',
-                    attributes: ['lotNo', 'agreementNo']
+                    attributes: ['lotNo', 'agreementNo', 'loadingLabour', 'netWt']
                 },
                 {
                     model: Supplier,

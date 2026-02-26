@@ -15,7 +15,7 @@ const unloadingRateService = {
                 { model: Unit, as: 'unit', attributes: ['id', 'name'] },
                 { model: location, as: 'location', attributes: ['id', 'name', 'code'] },
             ],
-            order: [['createdAt', 'DESC']],
+            order: [['createdAt', 'ASC']],
         });
     },
 
@@ -26,7 +26,7 @@ const unloadingRateService = {
                 { model: Unit, as: 'unit', attributes: ['id', 'name'] },
                 { model: location, as: 'location', attributes: ['id', 'name', 'code'] },
             ],
-            order: [['createdAt', 'DESC']],
+            order: [['createdAt', 'ASC']],
         });
     },
 

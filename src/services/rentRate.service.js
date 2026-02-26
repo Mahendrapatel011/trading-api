@@ -20,7 +20,7 @@ const rentRateService = {
         { model: Unit, as: 'unit', attributes: ['id', 'name'] },
         { model: location, as: 'location', attributes: ['id', 'name', 'code'] },
       ],
-      order: [['createdAt', 'DESC']],
+      order: [['createdAt', 'ASC']],
     });
 
     return rentRates;
@@ -36,7 +36,7 @@ const rentRateService = {
         { model: Unit, as: 'unit', attributes: ['id', 'name'] },
         { model: location, as: 'location', attributes: ['id', 'name', 'code'] },
       ],
-      order: [['createdAt', 'DESC']],
+      order: [['createdAt', 'ASC']],
     });
 
     return rentRates;

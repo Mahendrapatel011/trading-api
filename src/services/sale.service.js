@@ -23,7 +23,7 @@ const saleService = {
                 }
             ],
             where: { isActive: true },
-            order: [['saleDt', 'DESC']]
+            order: [['saleDt', 'ASC'], ['id', 'ASC']]
         });
         return sales;
     },
@@ -64,7 +64,8 @@ const saleService = {
                 }
             ],
             order: [
-                ['billDate', 'DESC'],
+                ['billDate', 'ASC'],
+                ['id', 'ASC'],
                 [{ model: LotProcessing, as: 'processings' }, 'processingDate', 'ASC'],
                 [{ model: Sale, as: 'sales' }, 'saleDt', 'ASC'],
                 [{ model: Loan, as: 'loans' }, 'loanDt', 'ASC']

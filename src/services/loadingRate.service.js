@@ -19,7 +19,7 @@ const loadingRateService = {
                 { model: Unit, as: 'unit', attributes: ['id', 'name'] },
                 { model: location, as: 'location', attributes: ['id', 'name', 'code'] },
             ],
-            order: [['createdAt', 'DESC']],
+            order: [['createdAt', 'ASC']],
         });
     },
 
@@ -30,7 +30,7 @@ const loadingRateService = {
                 { model: Unit, as: 'unit', attributes: ['id', 'name'] },
                 { model: location, as: 'location', attributes: ['id', 'name', 'code'] },
             ],
-            order: [['createdAt', 'DESC']],
+            order: [['createdAt', 'ASC']],
         });
     },
 

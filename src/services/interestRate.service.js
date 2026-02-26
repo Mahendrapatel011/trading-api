@@ -10,7 +10,7 @@ const interestRateService = {
             include: [
                 { model: location, as: 'location', attributes: ['id', 'name', 'code'] },
             ],
-            order: [['createdAt', 'DESC']],
+            order: [['createdAt', 'ASC']],
         });
     },
 
@@ -19,7 +19,7 @@ const interestRateService = {
             include: [
                 { model: location, as: 'location', attributes: ['id', 'name', 'code'] },
             ],
-            order: [['createdAt', 'DESC']],
+            order: [['createdAt', 'ASC']],
         });
     },
 

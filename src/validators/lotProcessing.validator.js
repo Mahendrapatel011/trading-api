@@ -25,6 +25,7 @@ const lotProcessingValidator = {
     update: {
         body: Joi.object({
             processingDate: Joi.date(),
+            purchaseId: Joi.number().integer(),
             nikashiPkt: Joi.number().integer().min(0),
             purchaseCost: Joi.number().precision(2).min(0),
             nikashiLabour: Joi.number().precision(2).min(0),

@@ -9,21 +9,59 @@ const createLotProcessing = async (processingData) => {
         throw new ApiError(httpStatus.NOT_FOUND, 'Purchase not found');
     }
 
-    // Calculate totalExps if not provided or to ensure correctness
-    const totalExps =
-        parseFloat(processingData.purchaseCost || 0) +
-        parseFloat(processingData.nikashiLabour || 0) +
-        parseFloat(processingData.tayariLabour || 0) +
-        parseFloat(processingData.rent || 0) +
-        parseFloat(processingData.newBags || 0) +
-        parseFloat(processingData.sutli || 0) +
-        parseFloat(processingData.pktCollection || 0) +
-        parseFloat(processingData.raffuChippi || 0);
-
-    const lotProcessing = await LotProcessing.create({
-        ...processingData,
-        totalExps,
+    // Check if processing already exists for this lot
+    let lotProcessing = await LotProcessing.findOne({
+        where: { purchaseId: processingData.purchaseId, isActive: true }
     });
+
+    if (lotProcessing) {
+        // INCREMENTAL UPDATE: Add new values to existing ones
+        const updateData = {
+            nikashiPkt: (parseInt(lotProcessing.nikashiPkt) || 0) + (parseInt(processingData.nikashiPkt) || 0),
+            purchaseCost: lotProcessing.purchaseCost, // Stay constant as per user request
+            nikashiLabour: (parseFloat(lotProcessing.nikashiLabour) || 0) + (parseFloat(processingData.nikashiLabour) || 0),
+            tayariLabour: (parseFloat(lotProcessing.tayariLabour) || 0) + (parseFloat(processingData.tayariLabour) || 0),
+            rent: (parseFloat(lotProcessing.rent) || 0) + (parseFloat(processingData.rent) || 0),
+            newBags: (parseFloat(lotProcessing.newBags) || 0) + (parseFloat(processingData.newBags) || 0),
+            sutli: (parseFloat(lotProcessing.sutli) || 0) + (parseFloat(processingData.sutli) || 0),
+            pktCollection: (parseFloat(lotProcessing.pktCollection) || 0) + (parseFloat(processingData.pktCollection) || 0),
+            raffuChippi: (parseFloat(lotProcessing.raffuChippi) || 0) + (parseFloat(processingData.raffuChippi) || 0),
+            tayariPkt: (parseInt(lotProcessing.tayariPkt) || 0) + (parseInt(processingData.tayariPkt) || 0),
+            tayariWt: (parseFloat(lotProcessing.tayariWt) || 0) + (parseFloat(processingData.tayariWt) || 0),
+            charriPkt: (parseInt(lotProcessing.charriPkt) || 0) + (parseInt(processingData.charriPkt) || 0),
+            charriWt: (parseFloat(lotProcessing.charriWt) || 0) + (parseFloat(processingData.charriWt) || 0),
+            processingDate: processingData.processingDate || lotProcessing.processingDate // Keep latest date
+        };
+
+        // Recalculate totalExps
+        updateData.totalExps =
+            parseFloat(updateData.purchaseCost) +
+            parseFloat(updateData.nikashiLabour) +
+            parseFloat(updateData.tayariLabour) +
+            parseFloat(updateData.rent) +
+            parseFloat(updateData.newBags) +
+            parseFloat(updateData.sutli) +
+            parseFloat(updateData.pktCollection) +
+            parseFloat(updateData.raffuChippi);
+
+        await lotProcessing.update(updateData);
+    } else {
+        // NEW RECORD: Calculate totalExps
+        const totalExps =
+            parseFloat(processingData.purchaseCost || 0) +
+            parseFloat(processingData.nikashiLabour || 0) +
+            parseFloat(processingData.tayariLabour || 0) +
+            parseFloat(processingData.rent || 0) +
+            parseFloat(processingData.newBags || 0) +
+            parseFloat(processingData.sutli || 0) +
+            parseFloat(processingData.pktCollection || 0) +
+            parseFloat(processingData.raffuChippi || 0);
+
+        lotProcessing = await LotProcessing.create({
+            ...processingData,
+            totalExps,
+        });
+    }
 
     return lotProcessing;
 };
@@ -37,7 +75,7 @@ const queryLotProcessings = async (filter = {}) => {
                 as: 'purchase',
             },
         ],
-        order: [['processingDate', 'DESC']],
+        order: [['processingDate', 'ASC'], ['id', 'ASC']],
     });
     return lotProcessings;
 };
@@ -60,7 +98,7 @@ const getLotProcessingById = async (id) => {
 const getLotProcessingsByPurchaseId = async (purchaseId) => {
     return await LotProcessing.findAll({
         where: { purchaseId, isActive: true },
-        order: [['processingDate', 'DESC']],
+        order: [['processingDate', 'ASC'], ['id', 'ASC']],
     });
 };
 

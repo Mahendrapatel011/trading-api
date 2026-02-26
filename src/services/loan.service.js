@@ -39,8 +39,9 @@ const loanService = {
 
                 // Update main loan record with the latest repayment date
                 const latestDt = validRepayments.reduce((latest, r) => {
+                    if (!r.repaymentDt) return latest;
                     return (!latest || r.repaymentDt > latest) ? r.repaymentDt : latest;
-                }, '');
+                }, null);
                 if (latestDt) {
                     await loan.update({ repaymentDt: latestDt });
                 }
@@ -95,9 +96,10 @@ const loanService = {
 
                 // Set latest repayment date as the main repaymentDt
                 const latestDt = validRepayments.reduce((latest, r) => {
+                    if (!r.repaymentDt) return latest;
                     return (!latest || r.repaymentDt > latest) ? r.repaymentDt : latest;
-                }, '');
-                if (latestDt) data.repaymentDt = latestDt;
+                }, null);
+                data.repaymentDt = latestDt;
             } else {
                 data.repaymentDt = null;
             }
@@ -158,7 +160,7 @@ const loanService = {
                     ]
                 }
             ],
-            order: [['loanDt', 'ASC']]
+            order: [['loanDt', 'ASC'], ['id', 'ASC']]
         });
     },
 
@@ -181,7 +183,7 @@ const loanService = {
                 }
             ],
             where: { isActive: true },
-            order: [['loanDt', 'DESC']]
+            order: [['loanDt', 'ASC'], ['id', 'ASC']]
         });
     }
 };
