@@ -92,16 +92,31 @@ const saleService = {
             const tRate = taiyariRates.find(r => r.itemId === p.itemId)?.rate || 0;
             const rRate = rentRates.find(r => r.itemId === p.itemId)?.rate || 0;
 
-            // Calculate shortage: (Gross Wt - Total Sold Wt - (Charri / 2)) / Gross Wt * 100
+            // Calculate shortage: (Gross Wt - Tayari Sold Wt - MAX(Charri Sold Wt, Charri Produced Wt)) / Gross Wt * 100
             let shortage = 0;
             if (p.sales.length > 0) {
                 const grWt = parseFloat(p.grWt) || 0;
-                // Get charri from LotProcessing (usually stored as packets, 1 pkt = 0.5 quintal)
-                const charriPkt = (p.processings && p.processings.length > 0) ? (parseFloat(p.processings[0].charriPkt) || 0) : 0;
-                const charriWt = charriPkt / 2;
+
+                const tayariSoldWt = p.sales
+                    .filter(s => s.saleType !== 'Charri')
+                    .reduce((sum, s) => sum + parseFloat(s.saleWt || 0), 0);
+
+                const charriSoldWt = p.sales
+                    .filter(s => s.saleType === 'Charri')
+                    .reduce((sum, s) => sum + parseFloat(s.saleWt || 0), 0);
+
+                // Get total charri produced from LotProcessing
+                const charriProducedWt = (p.processings || []).reduce((sum, pr) => {
+                    const prCharriWt = parseFloat(pr.charriWt) || 0;
+                    const prCharriPkt = parseFloat(pr.charriPkt) || 0;
+                    return sum + (prCharriWt > 0 ? prCharriWt : prCharriPkt / 2);
+                }, 0);
+
+                // Use whichever is greater to prevent double-counting Charri and still account for it if unsold
+                const effectiveCharriWt = Math.max(charriSoldWt, charriProducedWt);
 
                 if (grWt > 0) {
-                    shortage = (((grWt - soldWt - charriWt) / grWt) * 100).toFixed(2);
+                    shortage = (((grWt - tayariSoldWt - effectiveCharriWt) / grWt) * 100).toFixed(2);
                 }
             }
 
