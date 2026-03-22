@@ -31,6 +31,14 @@ router.post(
     purchaseController.generateBillNo
 );
 
+// Restore a soft-deleted purchase (Super Admin only)
+router.post(
+    '/restore',
+    authorizeRoles(USER_ROLES.SUPER_ADMIN),
+    validate(purchaseValidator.restore),
+    purchaseController.restore
+);
+
 // Get by ID
 router.get(
     '/:id',

@@ -83,6 +83,14 @@ const purchaseValidator = {
             locationId: Joi.number().integer(), // For super admin
         }),
     },
+
+    restore: {
+        body: Joi.object({
+            locationId: Joi.number().integer(), // Optional: for non-impersonating super admin
+            year: Joi.number().integer().min(2020).max(2100).required(),
+            agreementNo: Joi.string().trim().required(),
+        }),
+    },
 };
 
 export default purchaseValidator;

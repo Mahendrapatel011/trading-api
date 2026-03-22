@@ -47,7 +47,11 @@ const purchaseController = {
      * Generate next Bill Number
      */
     generateBillNo: asyncHandler(async (req, res) => {
-        const locationId = req.isSuperAdmin ? req.body.locationId : req.locationId;
+        // If impersonating, req.locationId is already set to the impersonated location.
+        // Prefer explicit body.locationId (for non-impersonating super admin), then fallback to req.locationId.
+        const locationId = req.isSuperAdmin
+            ? (req.body.locationId || req.locationId)
+            : req.locationId;
         const year = req.query.year ? parseInt(req.query.year) : new Date().getFullYear();
 
         if (!locationId) {
@@ -67,6 +71,11 @@ const purchaseController = {
     create: asyncHandler(async (req, res) => {
         // If not super admin, force locationId from token
         if (!req.isSuperAdmin) {
+            req.body.locationId = req.locationId;
+        }
+
+        // If super admin is impersonating and no explicit locationId given, use the impersonated location
+        if (req.isSuperAdmin && !req.body.locationId && req.locationId) {
             req.body.locationId = req.locationId;
         }
 
@@ -140,6 +149,41 @@ const purchaseController = {
         res.status(httpStatus.OK).json({
             success: true,
             data: history,
+        });
+    }),
+
+    /**
+     * Restore a soft-deleted purchase by agreement number (Super Admin / Impersonating only)
+     */
+    restore: asyncHandler(async (req, res) => {
+        // Must be super admin (impersonating or not)
+        if (!req.isSuperAdmin) {
+            throw new ApiError(httpStatus.FORBIDDEN, 'Only super admin can restore deleted purchases');
+        }
+
+        const locationId = req.body.locationId || req.locationId;
+        const { year, agreementNo } = req.body;
+
+        if (!locationId) {
+            throw new ApiError(httpStatus.BAD_REQUEST, 'Location is required');
+        }
+        if (!year) {
+            throw new ApiError(httpStatus.BAD_REQUEST, 'Year is required');
+        }
+        if (!agreementNo || !agreementNo.trim()) {
+            throw new ApiError(httpStatus.BAD_REQUEST, 'Agreement No. is required');
+        }
+
+        const purchase = await purchaseService.restoreByAgreementNo(
+            locationId,
+            parseInt(year),
+            agreementNo.trim()
+        );
+
+        res.status(httpStatus.OK).json({
+            success: true,
+            message: `Purchase with Agreement No. "${agreementNo}" restored successfully`,
+            data: purchase,
         });
     }),
 };

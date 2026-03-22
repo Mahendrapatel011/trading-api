@@ -318,6 +318,21 @@ const purchaseService = {
             throw new ApiError(httpStatus.NOT_FOUND, 'Purchase lot not found');
         }
 
+        // ❌ Block transfer if this lot has any active sales
+        const existingSales = await Sale.findAll({
+            where: { purchaseId: purchase.id, isActive: true },
+            attributes: ['id', 'party', 'saleWt', 'saleDt'],
+        });
+
+        if (existingSales.length > 0) {
+            const parties = [...new Set(existingSales.map(s => s.party).filter(Boolean))].join(', ');
+            throw new ApiError(
+                httpStatus.CONFLICT,
+                `This lot cannot be transferred because it already has ${existingSales.length} sale record(s). ` +
+                `Sale parties: ${parties || 'N/A'}. Please delete the sales first to transfer this lot.`
+            );
+        }
+
         const previousOwnerId = purchase.purchasedForId || purchase.supplierId;
         const previousRate = purchase.rate;
 
@@ -343,6 +358,44 @@ const purchaseService = {
             locationId: purchase.locationId,
             year: purchase.year
         });
+
+        return await purchaseService.getById(purchase.id);
+    },
+
+    /**
+     * Restore a soft-deleted purchase by agreement number
+     */
+    restoreByAgreementNo: async (locationId, year, agreementNo) => {
+        // Find the deleted purchase (isActive = false)
+        const purchase = await Purchase.findOne({
+            where: { locationId, year, agreementNo, isActive: false },
+            include: [
+                { model: Supplier, as: 'supplier', attributes: ['id', 'name', 'mobileNo'] },
+                { model: Supplier, as: 'purchasedFor', attributes: ['id', 'name', 'mobileNo'] },
+                { model: Item, as: 'item', attributes: ['id', 'name', 'code'] },
+                {
+                    model: Sale,
+                    as: 'sales',
+                    required: false,
+                },
+            ],
+        });
+
+        if (!purchase) {
+            throw new ApiError(
+                httpStatus.NOT_FOUND,
+                `No deleted purchase found with Agreement No. "${agreementNo}" for this location and year`
+            );
+        }
+
+        // Restore purchase
+        await purchase.update({ isActive: true });
+
+        // Also restore all associated sales (soft-deleted along with purchase)
+        await Sale.update(
+            { isActive: true },
+            { where: { purchaseId: purchase.id, isActive: false } }
+        );
 
         return await purchaseService.getById(purchase.id);
     },
